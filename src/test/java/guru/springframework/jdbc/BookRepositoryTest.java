@@ -2,6 +2,7 @@ package guru.springframework.jdbc;
 
 import guru.springframework.jdbc.domain.Book;
 import guru.springframework.jdbc.repositories.BookRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -9,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,6 +24,15 @@ class BookRepositoryTest {
 
     @Autowired
     BookRepository bookRepository;
+
+    @Test
+    void testBookStream() {
+        AtomicInteger count = new AtomicInteger();
+
+        bookRepository.findAllByTitleNotNull().forEach(book -> count.incrementAndGet());
+
+        Assertions.assertThat(count.get()).isPositive();
+    }
 
     @Test
     void testEmptyResultException() {
