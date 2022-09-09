@@ -27,6 +27,24 @@ class BookRepositoryTest {
     BookRepository bookRepository;
 
     @Test
+    void testBookWithNativeQuery() {
+        Book book = bookRepository.findBookByTitleWithNativeQuery("Clean Code");
+        Assertions.assertThat(book).isNotNull();
+    }
+
+    @Test
+    void testBookWithQueryNamed() {
+        Book book = bookRepository.findBookByTitleWithQueryNamed("Clean Code");
+        Assertions.assertThat(book).isNotNull();
+    }
+
+    @Test
+    void testBookWithQuery() {
+        Book book = bookRepository.findBookByTitleWithQuery("Clean Code");
+        Assertions.assertThat(book).isNotNull();
+    }
+
+    @Test
     void testBookFuture() throws ExecutionException, InterruptedException {
         Future<Book> bookFuture = bookRepository.queryByTitle("Clean Code");
 
