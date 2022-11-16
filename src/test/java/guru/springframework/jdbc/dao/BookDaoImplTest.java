@@ -3,7 +3,7 @@ package guru.springframework.jdbc.dao;
 import guru.springframework.jdbc.domain.Author;
 import guru.springframework.jdbc.domain.Book;
 import jakarta.persistence.EntityManagerFactory;
-import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,30 +12,25 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ActiveProfiles("local")
 @DataJpaTest
 @ComponentScan(basePackages = {"guru.springframework.jdbc.dao"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class BookDaoHibernateTest {
+class BookDaoImplTest {
 
     @Autowired
-    EntityManagerFactory emf;
-
     BookDao bookDao;
 
-    @BeforeEach
-    void setUp() {
-        bookDao = new BookDaoHibernate(emf);
-    }
-
     @Test
-    void findAllBooksSortByTitle() {
+    void findAllBooksPage1_SortByTitle() {
         List<Book> books = bookDao.findAllBooksSortByTitle(PageRequest.of(0, 2,
                 Sort.by(Sort.Order.desc("title"))));
 
@@ -44,7 +39,7 @@ class BookDaoHibernateTest {
     }
 
     @Test
-    void findAllBooks() {
+    void findAllBooksPage1_pageable() {
         List<Book> books = bookDao.findAllBooks(PageRequest.of(0, 2));
 
         assertThat(books).isNotNull();
@@ -52,7 +47,47 @@ class BookDaoHibernateTest {
     }
 
     @Test
-    void testFindAllBooks() {
+    void findAllBooksPage2_pageable() {
+        List<Book> books = bookDao.findAllBooks(PageRequest.of(1, 2));
+
+        assertThat(books).isNotNull();
+        assertThat(books.size()).isEqualTo(2);
+    }
+
+    @Test
+    void findAllBooksPage6_pageable() {
+        List<Book> books = bookDao.findAllBooks(PageRequest.of(5, 2));
+
+        assertThat(books).isNotNull();
+        assertThat(books.size()).isEqualTo(0);
+    }
+
+    @Test
+    void findAllBooksPage1() {
+        List<Book> books = bookDao.findAllBooks(2, 0);
+
+        assertThat(books).isNotNull();
+        assertThat(books.size()).isEqualTo(2);
+    }
+
+    @Test
+    void findAllBooksPage2() {
+        List<Book> books = bookDao.findAllBooks(2, 2);
+
+        assertThat(books).isNotNull();
+        assertThat(books.size()).isEqualTo(2);
+    }
+
+    @Test
+    void findAllBooksPage6() {
+        List<Book> books = bookDao.findAllBooks(2, 10);
+
+        assertThat(books).isNotNull();
+        assertThat(books.size()).isEqualTo(0);
+    }
+
+    @Test
+    void findAllBooks() {
         List<Book> books = bookDao.findAllBooks();
 
         assertThat(books).isNotNull();
@@ -120,8 +155,6 @@ class BookDaoHibernateTest {
 
         bookDao.deleteBookById(saved.getId());
 
-        Book deleted = bookDao.getById(saved.getId());
-
-        assertThat(deleted).isNull();
+        assertThrows(JpaObjectRetrievalFailureException.class, () -> bookDao.getById(saved.getId()));
     }
 }
